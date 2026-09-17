@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiki-Bíblia — Estudo Bíblico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,480;0,9..144,600;1,9..144,480&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233b;
+    --ink-2:#1f3153;
+    --ink-line: rgba(236,230,214,0.16);
+    --parchment:#f2ecd9;
+    --paper:#fffcf4;
+    --paper-edge:#e4dabd;
+    --gold:#a97d2f;
+    --gold-bright:#cd9c46;
+    --burgundy:#7c3341;
+    --text:#2a2318;
+    --text-soft:#6d6250;
+    --on-ink:#ece6d6;
+    --on-ink-soft:#a7b1c8;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--parchment);
+    color:var(--text);
+    font-family:'Source Serif 4', Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:'Fraunces', Georgia, serif; font-weight:480; margin:0; }
+  ::selection{ background:var(--gold-bright); color:#1a1408; }
+
+  a{ color:inherit; }
+
+  /* ---------- layout shell ---------- */
+  .app{
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  @media (min-width:920px){
+    .app{
+      display:grid;
+      grid-template-columns: 392px 1fr;
+      align-items:stretch;
+    }
+  }
+
+  /* ---------- sidebar / rail ---------- */
+  .rail{
+    background: linear-gradient(180deg, var(--ink), var(--ink-2) 130%);
+    color:var(--on-ink);
+    display:flex;
+    flex-direction:column;
+  }
+  @media (min-width:920px){
+    .rail{ height:100vh; position:sticky; top:0; }
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:.85rem;
+    padding:1.9rem 1.7rem 1.4rem;
+    border-bottom:1px solid var(--ink-line);
+  }
+  .brand svg{ flex:none; width:34px; height:34px; }
+  .brand h1{ font-size:1.5rem; color:var(--on-ink); letter-spacing:.01em; line-height:1.1; }
+  .brand p{ margin:.2rem 0 0; font-size:.82rem; color:var(--on-ink-soft); font-style:italic; }
+
+  .rail-scroll{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:1.5rem 1.7rem 1rem;
+  }
+  .rail-scroll::-webkit-scrollbar{ width:8px; }
+  .rail-scroll::-webkit-scrollbar-thumb{ background:var(--ink-line); border-radius:4px; }
+
+  .group-title{
+    font-size:.78rem;
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    color:var(--gold-bright);
+    margin:1.6rem 0 .9rem;
+  }
+  .group-title:first-child{ margin-top:0; }
+
+  .field{ display:block; margin-bottom:1.05rem; }
+  .field > span.lbl{
+    display:flex; align-items:baseline; justify-content:space-between;
+    font-size:.88rem; color:var(--on-ink-soft);
+  }
+  .field .optional{ font-size:.74rem; font-style:italic; color:rgba(167,177,200,0.6); }
+
+  select, input[type=text], textarea{
+    width:100%;
+    margin-top:.4rem;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--ink-line);
+    color:var(--on-ink);
+    font-family:'Source Serif 4', serif;
+    font-size:1rem;
+    padding:.45rem .1rem;
+    transition:border-color .2s ease;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%23cd9c46' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right .2rem center;
+    padding-right:1.1rem;
+  }
+  select option{ color:#1a1408; }
+  textarea{ resize:vertical; min-height:4.2rem; line-height:1.45; }
+  select:focus, input:focus, textarea:focus{ outline:none; border-bottom-color:var(--gold-bright); }
+  select:disabled{ opacity:.35; }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  .check{
+    display:flex; align-items:center; gap:.55rem;
+    font-size:.85rem; color:var(--on-ink-soft);
+    margin:.2rem 0 1.2rem;
+    cursor:pointer;
+    user-select:none;
+  }
+  .check input{
+    appearance:none; -webkit-appearance:none;
+    width:16px; height:16px; flex:none;
+    border:1px solid rgba(167,177,200,0.5);
+    border-radius:3px;
+    display:grid; place-items:center;
+    cursor:pointer;
+  }
+  .check input::after{
+    content:"";
+    width:9px; height:9px;
+    background:var(--gold-bright);
+    border-radius:1px;
+    transform:scale(0);
+    transition:transform .12s ease;
+  }
+  .check input:checked::after{ transform:scale(1); }
+
+  .ref-pill{
+    margin-top:.4rem;
+    padding:.6rem .8rem;
+    border:1px solid var(--ink-line);
+    border-radius:3px;
+    font-family:'Fraunces', serif;
+    font-size:1.02rem;
+    color:var(--gold-bright);
+    letter-spacing:.01em;
+  }
+
+  .rail-actions{
+    padding:1.2rem 1.7rem 1.7rem;
+    border-top:1px solid var(--ink-line);
+  }
+  .btn-primary{
+    width:100%;
+    border:none;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#221805;
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:1rem;
+    padding:.85rem 1rem;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:.01em;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn-primary:hover{ filter:brightness(1.07); }
+  .btn-primary:active{ transform:translateY(1px); }
+  .btn-primary:disabled{ opacity:.5; cursor:progress; filter:none; }
+
+  .btn-row{ display:flex; gap:.6rem; margin-top:.7rem; }
+  .btn-ghost{
+    flex:1;
+    background:transparent;
+    border:1px solid var(--ink-line);
+    color:var(--on-ink-soft);
+    font-family:'Source Serif 4', serif;
+    font-size:.82rem;
+    padding:.55rem .4rem;
+    border-radius:3px;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .btn-ghost:hover{ border-color:var(--gold-bright); color:var(--on-ink); }
+  .btn-ghost:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* ---------- main stage ---------- */
+  .stage{
+    padding:2.4rem 6vw 4rem;
+    max-width:960px;
+    margin:0 auto;
+    width:100%;
+  }
+  .stage-header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:1rem;
+    flex-wrap:wrap;
+    margin-bottom:1.6rem;
+  }
+  .stage-header h2{
+    font-size:clamp(1.6rem, 3.4vw, 2.3rem);
+    color:var(--text);
+    line-height:1.15;
+  }
+  .tipo-pill{
+    font-family:'Source Serif 4', serif;
+    font-size:.78rem;
+    font-style:italic;
+    color:var(--burgundy);
+    border:1px solid var(--paper-edge);
+    background:var(--paper);
+    padding:.3rem .7rem;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+
+  .sheet{
+    background:var(--paper);
+    border:1px solid var(--paper-edge);
+    border-radius:4px;
+    box-shadow:0 1px 0 var(--paper-edge), 0 18px 40px -28px rgba(22,35,59,0.35);
+    min-height:60vh;
+    padding:clamp(1.6rem, 4vw, 3.2rem);
+  }
+
+  /* empty state */
+  .empty-state{
+    min-height:52vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:1.1rem;
+    color:var(--text-soft);
+  }
+  .empty-state svg{ width:64px; height:64px; opacity:.55; }
+  .empty-state p{ max-width:34ch; line-height:1.5; font-size:1rem; }
+  .empty-state strong{ color:var(--burgundy); font-weight:600; }
+
+  /* loading state */
+  .loading-state{
+    min-height:52vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1.2rem;
+  }
+  .loading-bar{
+    width:min(280px, 60vw);
+    height:2px;
+    background:var(--paper-edge);
+    border-radius:2px;
+    overflow:hidden;
+    position:relative;
+  }
+  .loading-bar span{
+    position:absolute; top:0; left:0; height:100%; width:38%;
+    background:linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+    animation:sweep 1.35s ease-in-out infinite;
+  }
+  @keyframes sweep{
+    0%{ transform:translateX(-100%); }
+    100%{ transform:translateX(360%); }
+  }
+  .loading-state p{ color:var(--text-soft); font-style:italic; font-size:.95rem; }
+
+  /* error state */
+  .error-state{
+    border-left:3px solid var(--burgundy);
+    padding:1rem 1.3rem;
+    background:#fbf3f0;
+    border-radius:0 3px 3px 0;
+  }
+  .error-state strong{ display:block; color:var(--burgundy); margin-bottom:.3rem; }
+  .error-state p{ margin:0; color:var(--text-soft); font-size:.92rem; line-height:1.5; }
+
+  /* manuscript result */
+  .manuscript{ max-width:74ch; }
+  .manuscript .meta{
+    font-size:.8rem; color:var(--text-soft); font-style:italic;
+    margin-bottom:1.6rem; padding-bottom:1.1rem; border-bottom:1px solid var(--paper-edge);
+  }
+  .manuscript h2{
+    font-size:1.32rem; color:var(--ink); margin:2.1rem 0 .8rem;
+    padding-bottom:.4rem; border-bottom:1px solid var(--paper-edge);
+  }
+  .manuscript h2:first-child{ margin-top:0; }
+  .manuscript h3{ font-size:1.05rem; color:var(--burgundy); margin:1.3rem 0 .5rem; }
+  .manuscript h4{ font-size:.95rem; color:var(--text); margin:1rem 0 .4rem; font-style:italic; }
+  .manuscript p{ line-height:1.7; margin:0 0 .95rem; color:var(--text); }
+  .manuscript ul{ margin:0 0 1rem; padding-left:1.3rem; }
+  .manuscript li{ line-height:1.65; margin-bottom:.4rem; }
+  .manuscript blockquote{
+    margin:1rem 0; padding:.2rem 0 .2rem 1.1rem;
+    border-left:3px solid var(--gold);
+    font-style:italic; color:var(--ink-2);
+  }
+  .manuscript strong{ color:var(--ink); }
+
+  .continue-wrap{ margin-top:1.6rem; text-align:center; }
+  .btn-continue{
+    background:transparent; border:1px solid var(--gold);
+    color:var(--gold); font-family:'Source Serif 4', serif; font-size:.88rem;
+    padding:.55rem 1.3rem; border-radius:20px; cursor:pointer;
+  }
+  .btn-continue:hover{ background:var(--gold); color:#fff; }
+
+  @media (prefers-reduced-motion: reduce){
+    .loading-bar span{ animation:none; left:0; width:100%; opacity:.5; }
+  }
+
+  :focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 8C15 5 8 5 5 7v24c3-2 10-2 15 1 5-3 12-3 15-1V7c-3-2-10-2-15 1Z" stroke="#cd9c46" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M20 8v24" stroke="#cd9c46" stroke-width="1.4"/>
+      </svg>
+      <div>
+        <h1>Wiki-Bíblia</h1>
+        <p>Estudo bíblico &amp; preparo de exortação</p>
+      </div>
+    </div>
+
+    <div class="rail-scroll">
+      <div class="group-title">Passagem</div>
+
+      <label class="field">
+        <span class="lbl">Livro</span>
+        <select id="livro"></select>
+      </label>
+
+      <div class="row2">
+        <label class="field">
+          <span class="lbl">Capítulo</span>
+          <select id="capitulo"></select>
+        </label>
+        <label class="field" id="versIniField">
+          <span class="lbl">Versículo</span>
+          <select id="versIni"></select>
+        </label>
+      </div>
+
+      <label class="check">
+        <input type="checkbox" id="capCompleto">
+        Estudar o capítulo completo
+      </label>
+
+      <label class="field" id="versFimField">
+        <span class="lbl">até (opcional, para um trecho)</span>
+        <select id="versFim"></select>
+      </label>
+
+      <div class="ref-pill" id="refPill">Gênesis 1:1</div>
+
+      <div class="group-title">Parâmetros do estudo</div>
+
+      <label class="field">
+        <span class="lbl">Provedor de IA</span>
+        <select id="provedor">
+          <option value="anthropic" selected>Claude (Anthropic)</option>
+          <option value="groq">Groq — openai/gpt-oss-120b (grátis)</option>
+          <option value="gemini">Google Gemini — gemini-3.6-flash</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="lbl">Profundidade</span>
+        <select id="profundidade">
+          <option>Básico (resumo)</option>
+          <option selected>Detalhado (completo)</option>
+          <option>Aprofundado (exegético)</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="lbl">Versão da Bíblia</span>
+        <select id="versao">
+          <option>King James Atualizada (KJA)</option>
+          <option>Almeida Corrigida Fiel (ACF)</option>
+          <option selected>Almeida Revista e Atualizada (ARA)</option>
+          <option>Nova Almeida Atualizada (NAA)</option>
+          <option>Nova Versão Internacional (NVI)</option>
+          <option>King James Version - inglês (KJV)</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="lbl">Público-alvo <span class="optional">opcional</span></span>
+        <input type="text" id="publico" placeholder="Ex.: jovens, novos convertidos...">
+      </label>
+
+      <label class="field">
+        <span class="lbl">Observações <span class="optional">opcional</span></span>
+        <textarea id="observacoes" rows="3" placeholder="Algo específico que deseje destacar..."></textarea>
+      </label>
+    </div>
+
+    <div class="rail-actions">
+      <button class="btn-primary" id="btnGerar">Gerar estudo</button>
+      <div class="btn-row">
+        <button class="btn-ghost" id="btnSalvar" disabled>Salvar .md</button>
+        <button class="btn-ghost" id="btnCopiar" disabled>Copiar</button>
+        <button class="btn-ghost" id="btnLimpar" disabled>Limpar</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-header">
+      <h2 id="stageRef">Selecione uma passagem para começar</h2>
+      <span class="tipo-pill" id="stageTipo">Versículo específico</span>
+    </div>
+
+    <div class="sheet" id="sheet">
+      <div class="empty-state" id="emptyState">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 14c-7-4-18-4-24 0v34c6-3 17-3 24 1 7-4 18-4 24-1V14c-6-4-17-4-24 0Z" stroke="#7c3341" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M32 14v35" stroke="#7c3341" stroke-width="1.6"/>
+        </svg>
+        <p>Escolha o livro, o capítulo e o versículo ao lado e toque em <strong>Gerar estudo</strong> para preparar um estudo completo com esboço de exortação.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ---------------------------------------------------------------
+  // Dados bíblicos
+  // ---------------------------------------------------------------
+  const LIVROS = [
+    ["Gênesis",50],["Êxodo",40],["Levítico",27],["Números",36],["Deuteronômio",34],
+    ["Josué",24],["Juízes",21],["Rute",4],["1 Samuel",31],["2 Samuel",24],
+    ["1 Reis",22],["2 Reis",25],["1 Crônicas",29],["2 Crônicas",36],["Esdras",10],
+    ["Neemias",13],["Ester",10],["Jó",42],["Salmos",150],["Provérbios",31],
+    ["Eclesiastes",12],["Cânticos",8],["Isaías",66],["Jeremias",52],["Lamentações",5],
+    ["Ezequiel",48],["Daniel",12],["Oséias",14],["Joel",3],["Amós",9],
+    ["Obadias",1],["Jonas",4],["Miquéias",7],["Naum",3],["Habacuque",3],
+    ["Sofonias",3],["Ageu",2],["Zacarias",14],["Malaquias",4],
+    ["Mateus",28],["Marcos",16],["Lucas",24],["João",21],["Atos",28],
+    ["Romanos",16],["1 Coríntios",16],["2 Coríntios",13],["Gálatas",6],["Efésios",6],
+    ["Filipenses",4],["Colossenses",4],["1 Tessalonicenses",5],["2 Tessalonicenses",3],
+    ["1 Timóteo",6],["2 Timóteo",4],["Tito",3],["Filemom",1],["Hebreus",13],
+    ["Tiago",5],["1 Pedro",5],["2 Pedro",3],["1 João",5],["2 João",1],
+    ["3 João",1],["Judas",1],["Apocalipse",22]
+  ];
+  const MAX_VERSICULOS = 176;
+
+  const $ = id => document.getElementById(id);
+  const livroSel = $('livro'), capSel = $('capitulo'), versIniSel = $('versIni'), versFimSel = $('versFim');
+  const capCompleto = $('capCompleto');
+  const versIniField = $('versIniField'), versFimField = $('versFimField');
+  const refPill = $('refPill'), stageRef = $('stageRef'), stageTipo = $('stageTipo');
+  const sheet = $('sheet');
+  const btnGerar = $('btnGerar'), btnSalvar = $('btnSalvar'), btnCopiar = $('btnCopiar'), btnLimpar = $('btnLimpar');
+
+  function fillOptions(select, values){
+    select.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
+  }
+
+  LIVROS.forEach(([nome]) => {
+    const opt = document.createElement('option');
+    opt.value = nome; opt.textContent = nome;
+    livroSel.appendChild(opt);
+  });
+
+  const versiculosArr = Array.from({length: MAX_VERSICULOS}, (_,i)=> String(i+1));
+
+  function onLivroChange(){
+    const total = LIVROS.find(([n]) => n === livroSel.value)?.[1] || 1;
+    const caps = Array.from({length: total}, (_,i)=> String(i+1));
+    fillOptions(capSel, caps);
+    atualizarReferencia();
+  }
+
+  function toggleCapCompleto(){
+    const completo = capCompleto.checked;
+    versIniSel.disabled = completo;
+    versFimSel.disabled = completo;
+    versIniField.style.opacity = completo ? .35 : 1;
+    versFimField.style.opacity = completo ? .35 : 1;
+    atualizarReferencia();
+  }
+
+  let referenciaAtual = '', tipoAtual = 'Versículo específico';
+  let gerado = false;
+  let textoAtual = '';
+
+  function atualizarReferencia(){
+    const livro = livroSel.value, capitulo = capSel.value;
+    if (capCompleto.checked){
+      referenciaAtual = `${livro} ${capitulo}`;
+      tipoAtual = 'Capítulo completo';
+    } else {
+      const ini = versIniSel.value, fim = versFimSel.value;
+      if (fim && fim !== ini){
+        let iniN = parseInt(ini,10), fimN = parseInt(fim,10);
+        if (fimN < iniN) [iniN, fimN] = [fimN, iniN];
+        referenciaAtual = `${livro} ${capitulo}:${iniN}-${fimN}`;
+        tipoAtual = 'Passagem/Trecho (vários versículos)';
+      } else {
+        referenciaAtual = `${livro} ${capitulo}:${ini}`;
+        tipoAtual = 'Versículo específico';
+      }
+    }
+    refPill.textContent = referenciaAtual;
+    stageTipo.textContent = tipoAtual;
+    if (!gerado) stageRef.textContent = 'Selecione uma passagem para começar';
+  }
+
+  fillOptions(versIniSel, versiculosArr);
+  fillOptions(versFimSel, ['', ...versiculosArr]);
+  onLivroChange();
+
+  livroSel.addEventListener('change', onLivroChange);
+  capSel.addEventListener('change', atualizarReferencia);
+  versIniSel.addEventListener('change', atualizarReferencia);
+  versFimSel.addEventListener('change', atualizarReferencia);
+  capCompleto.addEventListener('change', toggleCapCompleto);
+
+  // ---------------------------------------------------------------
+  // Construção do prompt (mesma estrutura do app original)
+  // ---------------------------------------------------------------
+  function montarPrompt(){
+    const profundidade = $('profundidade').value;
+    const versao = $('versao').value;
+    const publico = $('publico').value.trim();
+    const observacoes = $('observacoes').value.trim();
+
+    const nivel = {
+      'Básico (resumo)': 'um resumo objetivo, direto e fácil de entender',
+      'Detalhado (completo)': 'um estudo completo e detalhado, com boa profundidade',
+      'Aprofundado (exegético)': 'um estudo aprofundado, com análise exegética do texto original (hebraico/grego quando pertinente), comentário de estudiosos e referências cruzadas',
+    }[profundidade] || 'um estudo detalhado';
+
+    return `Você é um assistente de estudos bíblicos e homilética. Com base em fontes teológicas confiáveis — comentários bíblicos, dicionários bíblicos e estudos reconhecidos — produza ${nivel} sobre ela, em português, organizado EXATAMENTE nas seções abaixo, usando Markdown com títulos (##) e subtítulos (###):
+
+REFERÊNCIA BÍBLICA: ${referenciaAtual}
+TIPO DE ESTUDO: ${tipoAtual}
+VERSÃO DA BÍBLIA A USAR NAS CITAÇÕES: ${versao}
+PÚBLICO-ALVO DA EXORTAÇÃO: ${publico || 'Congregação em geral'}
+OBSERVAÇÕES ADICIONAIS DO USUÁRIO: ${observacoes || 'Nenhuma'}
+
+Estrutura obrigatória da resposta:
+
+## 1. Texto Bíblico
+Cite a passagem indicada usando obrigatoriamente a versão "${versao}". Transcreva o texto o mais fiel possível a essa versão e informe claramente o nome da versão usada. Se não tiver certeza absoluta da redação exata dessa versão, avise isso explicitamente e ofereça a citação mais próxima possível, sem inventar texto.
+
+## 2. Contexto Histórico e Cultural
+Autor, data provável, destinatários, cenário histórico e cultural da época.
+
+## 3. Contexto Literário
+Gênero literário, localização da passagem no livro, o que vem antes e depois, estrutura do texto.
+
+## 4. Análise Versículo por Versículo (ou por blocos, se for capítulo inteiro)
+Explicação do significado de cada versículo ou bloco de versículos, incluindo palavras-chave no idioma original quando relevante (com transliteração).
+
+## 5. Temas Teológicos Centrais
+Liste e explique os principais temas e doutrinas presentes no texto.
+
+## 6. Referências Cruzadas
+Outras passagens bíblicas que dialogam com o texto estudado.
+
+## 7. Aplicação Prática para os Dias de Hoje
+Como o texto se aplica à vida cristã contemporânea.
+
+## 8. Esboço para Exortação/Pregação
+Um esboço pronto para pregação, no formato:
+- Título sugerido
+- Texto-base
+- Introdução (ideia central a ser apresentada)
+- Ponto 1 (com versículo de apoio e uma breve explicação)
+- Ponto 2 (com versículo de apoio e uma breve explicação)
+- Ponto 3 (com versículo de apoio e uma breve explicação)
+- Ilustração ou exemplo prático sugerido
+- Conclusão e apelo/chamado à ação
+
+## 9. Perguntas para Reflexão ou Discussão em Grupo
+5 perguntas que ajudem a aprofundar o entendimento e aplicação do texto.
+
+## 10. Fontes Consultadas
+Liste os comentaristas, dicionários bíblicos ou linhas de estudo em que você baseou a análise (inclua links apenas se tiver certeza de que existem, sem inventar endereços).
+
+Seja fiel ao texto bíblico, evite especulações teológicas não sustentadas pelo texto ou por fontes confiáveis, e mantenha uma linguagem clara, pastoral e respeitosa.`;
+  }
+
+  // ---------------------------------------------------------------
+  // Renderização de markdown simples -> HTML
+  // ---------------------------------------------------------------
+  function escapeHtml(t){
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function inline(t){
+    t = escapeHtml(t);
+    t = t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    t = t.replace(/(?<!\*)\*(?!\*)(.+?)\*(?!\*)/g,'<em>$1</em>');
+    return t;
+  }
+  function renderMarkdown(md){
+    const lines = md.split('\n');
+    let html = '', inList = false;
+    for (let raw of lines){
+      const line = raw.trim();
+      if (!line){ if (inList){ html += '</ul>'; inList = false; } continue; }
+      let m;
+      if ((m = line.match(/^###\s+(.*)/))){ if(inList){html+='</ul>';inList=false;} html += `<h4>${inline(m[1])}</h4>`; }
+      else if ((m = line.match(/^##\s+(.*)/))){ if(inList){html+='</ul>';inList=false;} html += `<h2>${inline(m[1])}</h2>`; }
+      else if ((m = line.match(/^#\s+(.*)/))){ if(inList){html+='</ul>';inList=false;} html += `<h2>${inline(m[1])}</h2>`; }
+      else if ((m = line.match(/^[-*]\s+(.*)/))){ if(!inList){html+='<ul>';inList=true;} html += `<li>${inline(m[1])}</li>`; }
+      else if ((m = line.match(/^>\s?(.*)/))){ if(inList){html+='</ul>';inList=false;} html += `<blockquote>${inline(m[1])}</blockquote>`; }
+      else { if(inList){html+='</ul>';inList=false;} html += `<p>${inline(line)}</p>`; }
+    }
+    if (inList) html += '</ul>';
+    return html;
+  }
+
+  // ---------------------------------------------------------------
+  // Geração via backend próprio (/api/gerar), que chama a API da Anthropic
+  // ---------------------------------------------------------------
+  const loadingMsgs = [
+    'Consultando fontes teológicas confiáveis...',
+    'Organizando o contexto histórico e literário...',
+    'Analisando o texto versículo por versículo...',
+    'Redigindo o esboço de exortação...',
+    'Revisando referências cruzadas...'
+  ];
+
+  function mapApiError(e){
+    return (e && e.message) || 'Erro inesperado ao gerar o estudo.';
+  }
+
+  function setLoading(){
+    sheet.innerHTML = `
+      <div class="loading-state">
+        <div class="loading-bar"><span></span></div>
+        <p id="loadingMsg">${loadingMsgs[0]}</p>
+      </div>`;
+    let i = 0;
+    return setInterval(() => {
+      i = (i+1) % loadingMsgs.length;
+      const p = $('loadingMsg');
+      if (p) p.textContent = loadingMsgs[i];
+    }, 2600);
+  }
+
+  function setError(msg){
+    sheet.innerHTML = `
+      <div class="error-state">
+        <strong>Não foi possível gerar o estudo</strong>
+        <p>${escapeHtml(msg)}</p>
+      </div>`;
+  }
+
+  function paintResult(){
+    const dataStr = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+    sheet.innerHTML = `
+      <article class="manuscript">
+        <div class="meta">Gerado em ${dataStr} · versão ${$('versao').value}</div>
+        ${renderMarkdown(textoAtual)}
+      </article>`;
+  }
+
+  async function chamarBackend(promptInicial, onProgress){
+    const provider = $('provedor').value;
+    let messages = [{ role:'user', content: promptInicial }];
+    let full = '';
+    let rounds = 0;
+    while (rounds < 8){
+      rounds++;
+      const base = full;
+      const resp = await fetch('/api/gerar', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ provider, messages })
+      });
+      const data = await resp.json();
+      if (!resp.ok){
+        throw new Error(data?.error || `Erro HTTP ${resp.status}`);
+      }
+      const textParts = data.text || '';
+      full = base + textParts;
+      textoAtual = full;
+      if (onProgress) onProgress();
+
+      if (data.truncated && textParts.trim()){
+        messages.push({ role:'assistant', content: textParts });
+        messages.push({ role:'user', content:'Continue exatamente de onde parou, sem repetir nada do que já foi escrito, até concluir todas as 10 seções.' });
+        continue;
+      }
+      break;
+    }
+    return full;
+  }
+
+  btnGerar.addEventListener('click', async () => {
+    btnGerar.disabled = true;
+    btnGerar.textContent = 'Gerando...';
+    [btnSalvar, btnCopiar, btnLimpar].forEach(b => b.disabled = true);
+    stageRef.textContent = referenciaAtual;
+    textoAtual = '';
+    gerado = false;
+    const stopTimer = setLoading();
+    let started = false;
+
+    try {
+      const prompt = montarPrompt();
+      await chamarBackend(prompt, () => {
+        if (!started){ started = true; clearInterval(stopTimer); }
+        paintResult();
+      });
+      gerado = true;
+      paintResult();
+      [btnSalvar, btnCopiar, btnLimpar].forEach(b => b.disabled = false);
+    } catch (err){
+      clearInterval(stopTimer);
+      setError(mapApiError(err));
+    } finally {
+      btnGerar.disabled = false;
+      btnGerar.textContent = 'Gerar estudo';
+    }
+  });
+
+  btnSalvar.addEventListener('click', () => {
+    if (!textoAtual) return;
+    const cabecalho = `# Estudo Bíblico — ${referenciaAtual}\n_Gerado em ${new Date().toLocaleString('pt-BR')}_\n\n`;
+    const blob = new Blob([cabecalho + textoAtual], { type:'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `estudo_biblico_${referenciaAtual.replace(/\s+/g,'_')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  btnCopiar.addEventListener('click', async () => {
+    if (!textoAtual) return;
+    try {
+      await navigator.clipboard.writeText(textoAtual);
+      const original = btnCopiar.textContent;
+      btnCopiar.textContent = 'Copiado';
+      setTimeout(() => { btnCopiar.textContent = original; }, 1400);
+    } catch(e){ /* silencioso */ }
+  });
+
+  btnLimpar.addEventListener('click', () => {
+    textoAtual = '';
+    gerado = false;
+    [btnSalvar, btnCopiar, btnLimpar].forEach(b => b.disabled = true);
+    stageRef.textContent = 'Selecione uma passagem para começar';
+    sheet.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 14c-7-4-18-4-24 0v34c6-3 17-3 24 1 7-4 18-4 24-1V14c-6-4-17-4-24 0Z" stroke="#7c3341" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M32 14v35" stroke="#7c3341" stroke-width="1.6"/>
+        </svg>
+        <p>Escolha o livro, o capítulo e o versículo ao lado e toque em <strong>Gerar estudo</strong> para preparar um estudo completo com esboço de exortação.</p>
+      </div>`;
+  });
+</script>
+</body>
+</html>

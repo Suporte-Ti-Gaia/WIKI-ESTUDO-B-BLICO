@@ -1,0 +1,6 @@
+{
+  "name": "wiki-biblia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wiki-Bíblia - gerador de estudos bíblicos com IA, hospedado na Vercel."
+}
