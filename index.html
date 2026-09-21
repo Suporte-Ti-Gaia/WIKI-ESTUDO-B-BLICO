@@ -328,6 +328,17 @@
   }
 
   :focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
+  .app-footer{
+    text-align:center;
+    padding:1rem 1rem 1.3rem;
+    font-family:'Source Serif 4', serif;
+    font-size:.78rem;
+    font-style:italic;
+    color:var(--text-soft);
+    background:var(--parchment);
+    border-top:1px solid var(--paper-edge);
+  }
 </style>
 </head>
 <body>
@@ -446,6 +457,8 @@
     </div>
   </main>
 </div>
+
+<footer class="app-footer">Desenvolvido por: Renato Azevedo</footer>
 
 <script>
   // ---------------------------------------------------------------
@@ -696,7 +709,17 @@ Seja fiel ao texto bíblico, evite especulações teológicas não sustentadas p
         headers:{ 'Content-Type':'application/json' },
         body: JSON.stringify({ provider, messages })
       });
-      const data = await resp.json();
+      const raw = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e){
+        throw new Error(
+          resp.status === 404
+            ? 'A função /api/gerar não foi encontrada nesta implantação. Confira se a pasta "api" foi publicada junto com o index.html.'
+            : `O servidor respondeu algo inesperado (HTTP ${resp.status}), não um JSON válido.`
+        );
+      }
       if (!resp.ok){
         throw new Error(data?.error || `Erro HTTP ${resp.status}`);
       }
